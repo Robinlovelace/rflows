@@ -1,3 +1,45 @@
 # Employment density in Merseyside
 
-## 
+## Find all oas in Merseyside
+
+```{r}
+oas <- read.dbf("/home/robin/Data-pure/2001-census/oa/england_oa_2001_gen.dbf")
+head(oas)
+summary(oas[grepl("00BX|00BY|00BZ|00CA|00CB", oas$LABEL),])
+mers <- grepl("00BX|00BY|00BZ|00CA|00CB", oas$LABEL)
+```
+
+## Plot to check they're correct
+
+```{r}
+library(rgdal)
+# goa <- readOGR(dsn="/home/robin/Data-pure/2001-census/oa/", layer="england_oa_2001_gen")
+# mers <- goa[mers,]
+# plot(mers)
+# rm(goa)
+# save.image("mers.RData")
+load("mers.RData")
+plot(mers)
+oldMersData <- mers@data
+```
+
+## Load flow data and calculate total flows in
+
+```{r}
+# uk.oa.flow <- read.csv("~/Desktop/W301_OUT.csv") 
+# This file's half a Gib big!
+# mflow <- uk.oa.flow[which(uk.oa.flow$X00AAFA0001.1 %in% mers$LABEL ),]
+head(mflow)
+tmflow <- aggregate(mflow[,3] ~ mflow$X00AAFA0001.1, FUN=sum)
+names(tmflow) <- c("LABEL", "inflow")
+mers@data <- join(mers@data, tmflow)
+head(mers@data)
+plot(coordinates(mers), cex=mers$inflow/1000) # test it makes sense: largest circles in centre?
+writeOGR(mers, dsn=".", "mersin", driver="ESRI Shapefile")
+summary(mers)
+```
+
+
+
+
+
